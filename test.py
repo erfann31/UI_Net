@@ -1,49 +1,49 @@
-import socket
-from datetime import datetime
-import winpcapy
+import pydivert
 
-# Define some constants
-BROADCAST_MAC = 'ff:ff:ff:ff:ff:ff'
-PORT = 5000
 
-def send_message(dest_mac, msg):
-    """Send a message to the destination MAC address"""
-    
-    # Open network device for sending using Winpcap
-    dev = winpcapy.open_live('eth0', 65535, 0, 100)
+def send_message(mac_address, message):
+    with pydivert.WinDivert() as w:
+        # Construct the packet
+        packet = (
+                b"\x00\x01\x02\x03\x04\x05" +  # Source MAC address (dummy value)
+                bytes.fromhex(mac_address) +  # Destination MAC address
+                b"\x00\x00\x00\x00\x00\x00\x08\x00" +  # EtherType (0x0800 for IPv4)
+                b"\x45\x00\x00\x1c\x00\x00\x40\x00\x40\x11" +  # IPv4 header
+                b"\x00\x00\x00\x00" +  # Source IP address (dummy value)
+                b"\x00\x00\x00\x00" +  # Destination IP address (dummy value)
+                b"\x00\x00\x00\x00" +  # UDP header
+                message.encode()  # Message data
+        )
 
-    # Build proprietary packet 
-    packet = dest_mac + ':' + socket.gethostname() + ':' + msg 
-    
-    # Send packet via raw sockets
-    p = dev.send(BROADCAST_MAC, socket.AF_PACKET, 0, packet)
+        # Send the packet
+        w.send(packet)
 
-    print(f"Sent message to {dest_mac} at {datetime.now()}")
 
-def receive_message():
-    """Listen for incoming messages"""
+def receive_messages():
+    with pydivert.WinDivert() as w:
+        for packet in w:
+            # Extract the message from the packet
+            message = packet[-len(packet) + 42:].decode()
 
-    # Open network device for receiving using Winpcap  
-    dev = winpcapy.open_live('eth0', 65535, 1, 100)
-    
+            # Display the message and source MAC address
+            print(f"Received Message: {message} (From: {':'.join(f'{byte:02x}' for byte in packet.source)})")
+
+
+def main():
     while True:
-        # Read incoming packets
-        (header, packet) = dev.next()
+        choice = input("Select an option (1 = Send, 2 = Receive): ")
 
-        # Extract fields from proprietary format
-        src_mac, hostname, msg = packet.split(':')
+        if choice == '1':
+            mac_address = input("Enter the destination MAC address: ")
+            message = input("Enter the message to send: ")
+            send_message(mac_address, message)
+            print("Message sent!")
+        elif choice == '2':
+            print("Waiting for messages...")
+            receive_messages()
+        else:
+            print("Invalid option. Try again.")
 
-        print(f"Received from {src_mac} at {datetime.now()}: {msg}")
 
-if __name__ == '__main__':
-    
-    # Run in sender or receiver mode
-    mode = input("Send or Receive (s/r)? ")
-    
-    if mode == 's':
-        dest_mac = input("Destination MAC: ").upper()
-        msg = input("Message: ")
-        send_message(dest_mac, msg)
-    
-    elif mode == 'r':
-        receive_message()
+if __name__ == "__main__":
+    main()
