@@ -14,6 +14,7 @@ class CustomProtocol(Packet):
 # Function to send a message
 def send_message(destination_mac, message):
     packet = Ether(dst=destination_mac) / CustomProtocol(text=message, destination_mac=destination_mac)
+    packet.show()
     sendp(packet, iface="Wi-Fi")
 
 
@@ -28,7 +29,7 @@ def receive_message(packet):
 
 # Sniff for incoming messages
 def listen_for_messages():
-    sniff(prn=receive_message, store=0)
+    sniff(iface="Wi-Fi", prn=receive_message, store=0)
 
 
 # Main program loop
@@ -47,4 +48,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
