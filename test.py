@@ -5,6 +5,7 @@ PREM = "message:"
 PREA = "ack:"
 IFACE = 'VMware Network Adapter VMnet8'
 ack_received = False
+ack_sent = False
 
 
 # Define a custom protocol with necessary fields
@@ -43,9 +44,14 @@ def wait_for_acknowledgment():
 
 # Function to send a message
 def send_message(destination_mac, pre, message):
+    global ack_sent
     packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message, destination_mac=destination_mac)
     # packet.show()
     sendp(packet, iface=IFACE)
+    if pre == "ack":
+        ack_sent= True
+    else:
+        ack_sent= False
 
 
 # Function to receive and process messages
@@ -68,6 +74,10 @@ def receive_message(packet):
             extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
             print(f"Extracted message: {extracted_message}")
             send_message(src_mac, PREA, extracted_message)
+            print(f"Acknowledgment for message '{extracted_message}' sent")
+            # return True  # Return to main loop
+
+    # return False
 
 
 # Sniff for incoming messages
@@ -93,9 +103,13 @@ def main():
         elif choice.upper() == 'R':
             print("Listening for messages...")
             listen_for_messages()
+            while True:
+                if ack_sent:
+                    break
         elif choice.upper() == 'Q':
             print("Exiting the program...")
             break
+
 
 if __name__ == '__main__':
     main()
