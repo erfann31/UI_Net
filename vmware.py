@@ -107,7 +107,7 @@ def main():
         elif choice.upper() == 'R':
             quit = False
             print("Listening for messages...")
-            quit_listening()  # Listen for 'q' key press to exit the listening loop
+            # quit_listening()  # Listen for 'q' key press to exit the listening loop
             listen_for_messages()
         elif choice.upper() == 'Q':
             print("Exiting the program...")
