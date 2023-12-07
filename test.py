@@ -1,7 +1,7 @@
 from scapy.all import *
 from scapy.layers.l2 import Ether
 
-
+IFACE='VMware Network Adapter VMnet8'
 # Define a custom protocol with necessary fields
 class CustomProtocol(Packet):
     name = "CustomProtocol"
@@ -15,7 +15,7 @@ class CustomProtocol(Packet):
 def send_message(destination_mac, message):
     packet = Ether(dst=destination_mac) / CustomProtocol(text=message, destination_mac=destination_mac)
     packet.show()
-    sendp(packet, iface="VMware Network Adapter VMnet8")
+    sendp(packet, iface=IFACE)
 
 
 # Function to receive and process messages
@@ -30,7 +30,7 @@ def receive_message(packet):
 # Sniff for incoming messages
 def listen_for_messages():
     while True:
-        frames =sniff(iface="VMware Network Adapter VMnet8", prn=receive_message, count=1)
+        frames =sniff(iface=IFACE, prn=receive_message, count=1)
         print(frames)
 
 
