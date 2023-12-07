@@ -28,7 +28,7 @@ def handle_acknowledgment(packet):
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
         # packet.show()
-        print("Acknowledgment Received")
+        print("Acknowledgment Received!\n")
 
 
 def wait_for_acknowledgment():
@@ -66,7 +66,7 @@ def receive_message(packet):
             extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
             print(f"Extracted message: {extracted_message}")
             send_message(stored_packet.source, PREA, extracted_message, src_mac=stored_packet.destination)
-            print(f"Acknowledgment for message '{extracted_message}' sent")
+            print(f"Acknowledgment for message '{extracted_message}' sent!\n")
             block_receiving = True
 
 
