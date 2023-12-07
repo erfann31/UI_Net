@@ -8,7 +8,6 @@ ack_received = False
 block_receiving = False
 
 
-# Define a custom protocol with necessary fields
 class CustomProtocol(Packet):
     name = "CustomProtocol"
     fields_desc = [
@@ -25,25 +24,11 @@ class PacketModel:
 
 
 def handle_acknowledgment(packet):
-    packet.show()
     global ack_received
-    global block_receiving
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
-        src_mac = packet.src
-        dst_mac = packet.dst
-        packet_type = packet.type
-        raw_load = packet.load
-        stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
-        print(f"Source MAC: {stored_packet.source}")
-        print(f"Destination MAC: {stored_packet.destination}")
-        # print(f"Packet Type: {stored_packet.packet_type}")
-        # print(f"Raw Load: {stored_packet.raw_load}")
-        delimiter_index = raw_load.find(b':')
-
-        if delimiter_index != -1:
-            extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
-            ack_received = True
-            print("Acknowledgment Received")
+        ack_received = True
+        packet.show()
+        print("Acknowledgment Received")
 
 
 def wait_for_acknowledgment():
@@ -55,18 +40,16 @@ def wait_for_acknowledgment():
         sniff(iface=IFACE, prn=handle_acknowledgment, count=1)
 
 
-# Function to send a message
 def send_message(destination_mac, pre, message, **kwargs):
-    global IFACE
-    print(IFACE)
-    src_mac = kwargs.get('src_mac')
-    print(src_mac)
+    # global IFACE
+    # print(IFACE)
+    # src_mac = kwargs.get('src_mac')
+    # print(src_mac)
     packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message)
-    packet.show()
+    # packet.show()
     sendp(packet, iface=IFACE)
 
 
-# Function to receive and process messages
 def receive_message(packet):
     global block_receiving
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"message:"):
@@ -77,8 +60,6 @@ def receive_message(packet):
         stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
         print(f"Source MAC: {stored_packet.source}")
         print(f"Destination MAC: {stored_packet.destination}")
-        # print(f"Packet Type: {stored_packet.packet_type}")
-        # print(f"Raw Load: {stored_packet.raw_load}")
         delimiter_index = raw_load.find(b':')
 
         if delimiter_index != -1:
@@ -89,16 +70,12 @@ def receive_message(packet):
             block_receiving = True
 
 
-
-# Sniff for incoming messages
 def listen_for_messages():
     global block_receiving
     while not block_receiving:
         sniff(iface=IFACE, prn=receive_message, count=1)
-        # print(frames[0])
 
 
-# Main program loop
 def main():
     while True:
         choice = input("Choose 'S' to send a message or 'R' to receive messages (or 'Q' to quit): ")
@@ -107,7 +84,7 @@ def main():
             destination_mac = input("Enter the destination MAC address: ")
             message = input("Enter the message to send: ")
             send_message(destination_mac, PREM, message)
-            wait_for_acknowledgment()  # Wait for acknowledgment after sending message
+            wait_for_acknowledgment()
             if not ack_received:
                 print("No acknowledgment received.")
             ack_received = False
