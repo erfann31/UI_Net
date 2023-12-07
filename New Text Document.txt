@@ -1,6 +1,9 @@
 vmware : 00:0C:29:CD:C9:A4
-taha : 0C:9A:3C:7F:6D:3B
-erfan : 84:7B:57:F0:E9:C5
 erfanvm : 00:50:56:C0:00:08
 
 Local Area Connection
+VMware Network Adapter VMnet8
+
+
+taha : 0C:9A:3C:7F:6D:3B
+erfan : 84:7B:57:F0:E9:C5
