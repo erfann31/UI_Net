@@ -27,7 +27,7 @@ def handle_acknowledgment(packet):
     global ack_received
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
-        packet.show()
+        # packet.show()
         print("Acknowledgment Received")
 
 
@@ -58,8 +58,8 @@ def receive_message(packet):
         packet_type = packet.type
         raw_load = packet.load
         stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
-        print(f"Source MAC: {stored_packet.source}")
-        print(f"Destination MAC: {stored_packet.destination}")
+        # print(f"Source MAC: {stored_packet.source}")
+        # print(f"Destination MAC: {stored_packet.destination}")
         delimiter_index = raw_load.find(b':')
 
         if delimiter_index != -1:

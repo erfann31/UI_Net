@@ -27,7 +27,7 @@ def handle_acknowledgment(packet):
     global ack_received
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
-        packet.show()
+        # packet.show()
         print("Acknowledgment Received")
 
 
