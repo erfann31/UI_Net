@@ -13,7 +13,6 @@ class CustomProtocol(Packet):
     name = "CustomProtocol"
     fields_desc = [
         StrField("text", ""),
-        MACField("destination_mac", ETHER_ANY),
     ]
 
 
@@ -30,6 +29,7 @@ def handle_acknowledgment(packet):
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
         print("Acknowledgment Received")
+        packet.show()
 
 
 def wait_for_acknowledgment():
@@ -43,9 +43,10 @@ def wait_for_acknowledgment():
 
 
 # Function to send a message
-def send_message(destination_mac, pre, message):
-    packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message, destination_mac=destination_mac)
-    # packet.show()
+def send_message(destination_mac, pre, message, **kwargs):
+    src_mac =kwargs.get('src_mac')
+    packet = Ether(dst=destination_mac, src=src_mac) / CustomProtocol(text=pre + message)
+    packet.show()
     sendp(packet, iface=IFACE)
 
 
@@ -57,10 +58,10 @@ def receive_message(packet):
         dst_mac = packet.dst
         packet_type = packet.type
         raw_load = packet.load
-        # stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
+        stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
         # # Accessing stored packet information
-        # print(f"Source MAC: {stored_packet.source}")
-        # print(f"Destination MAC: {stored_packet.destination}")
+        print(f"Source MAC: {stored_packet.source}")
+        print(f"Destination MAC: {stored_packet.destination}")
         # print(f"Packet Type: {stored_packet.packet_type}")
         # print(f"Raw Load: {stored_packet.raw_load}")
         delimiter_index = raw_load.find(b':')
@@ -69,10 +70,10 @@ def receive_message(packet):
         if delimiter_index != -1:
             extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
             print(f"Extracted message: {extracted_message}")
-            send_message(src_mac, PREA, extracted_message)
+            send_message(stored_packet.source, PREA, extracted_message,src_mac=stored_packet.destination)
             print(f"Acknowledgment for message '{extracted_message}' sent")
             block_receiving = True
-            # return True  # Return to main loop
+            # return True  # Return to main loopr
 
     # return False
 
