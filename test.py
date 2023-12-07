@@ -1,3 +1,4 @@
+import keyboard
 from scapy.all import *
 from scapy.layers.l2 import Ether
 
@@ -5,7 +6,7 @@ PREM = "message:"
 PREA = "ack:"
 IFACE = 'VMware Network Adapter VMnet8'
 ack_received = False
-ack_sent = False
+quit = False
 
 
 # Define a custom protocol with necessary fields
@@ -44,14 +45,9 @@ def wait_for_acknowledgment():
 
 # Function to send a message
 def send_message(destination_mac, pre, message):
-    global ack_sent
     packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message, destination_mac=destination_mac)
     # packet.show()
     sendp(packet, iface=IFACE)
-    if pre == "ack":
-        ack_sent= True
-    else:
-        ack_sent= False
 
 
 # Function to receive and process messages
@@ -80,9 +76,17 @@ def receive_message(packet):
     # return False
 
 
+def quit_listening():
+    global quit
+    print("Press 'Q' to quit listening...")
+    keyboard.wait('q')  # Wait for 'q' key press
+    print("Exiting listening for messages...")
+    quit = True
+
+
 # Sniff for incoming messages
 def listen_for_messages():
-    while True:
+    while not quit:
         sniff(iface=IFACE, prn=receive_message, count=1)
         # print(frames[0])
 
@@ -91,7 +95,7 @@ def listen_for_messages():
 def main():
     while True:
         choice = input("Choose 'S' to send a message or 'R' to receive messages (or 'Q' to quit): ")
-        global ack_received
+        global ack_received, quit
         if choice.upper() == 'S':
             destination_mac = input("Enter the destination MAC address: ")
             message = input("Enter the message to send: ")
@@ -101,11 +105,10 @@ def main():
                 print("No acknowledgment received.")
             ack_received = False
         elif choice.upper() == 'R':
+            quit = False
             print("Listening for messages...")
+            quit_listening()  # Listen for 'q' key press to exit the listening loop
             listen_for_messages()
-            while True:
-                if ack_sent:
-                    break
         elif choice.upper() == 'Q':
             print("Exiting the program...")
             break
