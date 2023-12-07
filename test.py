@@ -38,13 +38,13 @@ def wait_for_acknowledgment():
 
     print("Waiting for acknowledgment...")
     while not ack_received and (time.time() - start_time) < timeout:
-        sniff(iface=IFACE, prn=handle_acknowledgment, timeout=1)
+        sniff(iface=IFACE, prn=handle_acknowledgment, count=1)
 
 
 # Function to send a message
 def send_message(destination_mac, pre, message):
     packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message, destination_mac=destination_mac)
-    packet.show()
+    # packet.show()
     sendp(packet, iface=IFACE)
 
 
@@ -81,7 +81,7 @@ def listen_for_messages():
 def main():
     while True:
         choice = input("Choose 'S' to send a message or 'R' to receive messages (or 'Q' to quit): ")
-
+        global ack_received
         if choice.upper() == 'S':
             destination_mac = input("Enter the destination MAC address: ")
             message = input("Enter the message to send: ")
