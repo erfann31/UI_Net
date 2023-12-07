@@ -2,3 +2,11 @@ vmware : 00:0C:29:CD:C9:A4
 taha : 0C:9A:3C:7F:6D:3B
 erfan : 84:7B:57:F0:E9:C5
 erfanvm : 00:50:56:C0:00:08
+
+Ethernet adapter Local Area Connection:
+
+   Connection-specific DNS Suffix  . : localdomain
+   Link-local IPv6 Address . . . . . : fe80::70:fcd7:8f
+   IPv4 Address. . . . . . . . . . . : 192.168.147.131
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.147.2
