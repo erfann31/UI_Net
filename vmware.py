@@ -27,9 +27,23 @@ class PacketModel:
 def handle_acknowledgment(packet):
     packet.show()
     global ack_received
+    global block_receiving
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
-        ack_received = True
-        print("Acknowledgment Received")
+        src_mac = packet.src
+        dst_mac = packet.dst
+        packet_type = packet.type
+        raw_load = packet.load
+        stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
+        print(f"Source MAC: {stored_packet.source}")
+        print(f"Destination MAC: {stored_packet.destination}")
+        # print(f"Packet Type: {stored_packet.packet_type}")
+        # print(f"Raw Load: {stored_packet.raw_load}")
+        delimiter_index = raw_load.find(b':')
+
+        if delimiter_index != -1:
+            extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
+            ack_received = True
+            print("Acknowledgment Received")
 
 
 def wait_for_acknowledgment():
