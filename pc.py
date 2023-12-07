@@ -25,18 +25,17 @@ class PacketModel:
 
 
 def handle_acknowledgment(packet):
+    packet.show()
     global ack_received
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
         print("Acknowledgment Received")
-        packet.show()
 
 
 def wait_for_acknowledgment():
     global ack_received
-    timeout = 10  # Timeout in seconds
+    timeout = 10
     start_time = time.time()
-
     print("Waiting for acknowledgment...")
     while not ack_received and (time.time() - start_time) < timeout:
         sniff(iface=IFACE, prn=handle_acknowledgment, count=1)
@@ -44,7 +43,7 @@ def wait_for_acknowledgment():
 
 # Function to send a message
 def send_message(destination_mac, pre, message, **kwargs):
-    src_mac =kwargs.get('src_mac')
+    src_mac = kwargs.get('src_mac')
     packet = Ether(dst=destination_mac, src=src_mac) / CustomProtocol(text=pre + message)
     packet.show()
     sendp(packet, iface=IFACE)
@@ -59,23 +58,19 @@ def receive_message(packet):
         packet_type = packet.type
         raw_load = packet.load
         stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
-        # # Accessing stored packet information
         print(f"Source MAC: {stored_packet.source}")
         print(f"Destination MAC: {stored_packet.destination}")
         # print(f"Packet Type: {stored_packet.packet_type}")
         # print(f"Raw Load: {stored_packet.raw_load}")
         delimiter_index = raw_load.find(b':')
 
-        # Extract the substring after the delimiter (if found)
         if delimiter_index != -1:
             extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
             print(f"Extracted message: {extracted_message}")
-            send_message(stored_packet.source, PREA, extracted_message,src_mac=stored_packet.destination)
+            send_message(stored_packet.source, PREA, extracted_message, src_mac=stored_packet.destination)
             print(f"Acknowledgment for message '{extracted_message}' sent")
             block_receiving = True
-            # return True  # Return to main loopr
 
-    # return False
 
 
 # Sniff for incoming messages
