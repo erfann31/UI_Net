@@ -1,4 +1,3 @@
-import keyboard
 from scapy.all import *
 from scapy.layers.l2 import Ether
 
@@ -6,7 +5,7 @@ PREM = "message:"
 PREA = "ack:"
 IFACE = 'Local Area Connection'
 ack_received = False
-quit = False
+block_receiving = False
 
 
 # Define a custom protocol with necessary fields
@@ -52,6 +51,7 @@ def send_message(destination_mac, pre, message):
 
 # Function to receive and process messages
 def receive_message(packet):
+    global block_receiving
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"message:"):
         src_mac = packet.src
         dst_mac = packet.dst
@@ -71,22 +71,16 @@ def receive_message(packet):
             print(f"Extracted message: {extracted_message}")
             send_message(src_mac, PREA, extracted_message)
             print(f"Acknowledgment for message '{extracted_message}' sent")
+            block_receiving = True
             # return True  # Return to main loop
 
     # return False
 
 
-def quit_listening():
-    global quit
-    print("Press 'Q' to quit listening...")
-    keyboard.wait('q')  # Wait for 'q' key press
-    print("Exiting listening for messages...")
-    quit = True
-
-
 # Sniff for incoming messages
 def listen_for_messages():
-    while not quit:
+    global block_receiving
+    while not block_receiving:
         sniff(iface=IFACE, prn=receive_message, count=1)
         # print(frames[0])
 
@@ -95,7 +89,7 @@ def listen_for_messages():
 def main():
     while True:
         choice = input("Choose 'S' to send a message or 'R' to receive messages (or 'Q' to quit): ")
-        global ack_received, quit
+        global ack_received, block_receiving
         if choice.upper() == 'S':
             destination_mac = input("Enter the destination MAC address: ")
             message = input("Enter the message to send: ")
@@ -105,9 +99,8 @@ def main():
                 print("No acknowledgment received.")
             ack_received = False
         elif choice.upper() == 'R':
-            quit = False
+            block_receiving = False
             print("Listening for messages...")
-            # quit_listening()  # Listen for 'q' key press to exit the listening loop
             listen_for_messages()
         elif choice.upper() == 'Q':
             print("Exiting the program...")
