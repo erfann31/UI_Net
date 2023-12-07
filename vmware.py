@@ -52,6 +52,7 @@ def send_message(destination_mac, pre, message, **kwargs):
 
 def receive_message(packet):
     global block_receiving
+    packet.show()
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"message:"):
         src_mac = packet.src
         dst_mac = packet.dst
