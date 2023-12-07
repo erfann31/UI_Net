@@ -10,6 +10,13 @@ class CustomProtocol(Packet):
         MACField("destination_mac", ETHER_ANY),
     ]
 
+class PacketModel:
+    def __init__(self, src, dst, packet_type, raw_load):
+        self.source = src
+        self.destination = dst
+        self.packet_type = packet_type
+        self.raw_load = raw_load
+
 
 # Function to send a message
 def send_message(destination_mac, message):
@@ -20,18 +27,25 @@ def send_message(destination_mac, message):
 
 # Function to receive and process messages
 def receive_message(packet):
-    if packet.haslayer(CustomProtocol):
-        custom_packet = packet[CustomProtocol]
-        source_mac = packet[Ether].src
-        text = custom_packet.text
-        print(f"Received message from {source_mac}: {text}")
+    if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"message:"):
+        src_mac = packet.src
+        dst_mac = packet.dst
+        packet_type = packet.type
+        raw_load = packet.load
+        stored_packet = PacketModel(src_mac, dst_mac, packet_type, raw_load)
+
+        # Accessing stored packet information
+        print(f"Source MAC: {stored_packet.source}")
+        print(f"Destination MAC: {stored_packet.destination}")
+        print(f"Packet Type: {stored_packet.packet_type}")
+        print(f"Raw Load: {stored_packet.raw_load}")
 
 
 # Sniff for incoming messages
 def listen_for_messages():
     while True:
         frames =sniff(iface=IFACE, prn=receive_message, count=1)
-        print(frames)
+        # print(frames[0])
 
 
 
@@ -41,9 +55,10 @@ def main():
         choice = input("Choose 'S' to send a message or 'R' to receive messages: ")
 
         if choice.upper() == 'S':
+            message = "message:"
             destination_mac = input("Enter the destination MAC address: ")
-            message = input("Enter the message to send: ")
-            send_message(destination_mac, message)
+            message2 = input("Enter the message to send: ")
+            send_message(destination_mac, message+message2)
         elif choice.upper() == 'R':
             print("Listening for messages...")
             listen_for_messages()
