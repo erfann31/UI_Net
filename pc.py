@@ -57,9 +57,11 @@ def wait_for_acknowledgment():
 
 # Function to send a message
 def send_message(destination_mac, pre, message, **kwargs):
+    global IFACE
+    print(IFACE)
     src_mac = kwargs.get('src_mac')
     print(src_mac)
-    packet = Ether(dst=destination_mac, src=src_mac) / CustomProtocol(text=pre + message)
+    packet = Ether(dst=destination_mac) / CustomProtocol(text=pre + message)
     packet.show()
     sendp(packet, iface=IFACE)
 
