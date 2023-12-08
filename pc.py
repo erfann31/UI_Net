@@ -25,10 +25,14 @@ class PacketModel:
 
 def handle_acknowledgment(packet):
     global ack_received
+    raw_load = packet.load
     if isinstance(packet.payload, Raw) and packet.payload.load.startswith(b"ack:"):
         ack_received = True
+        delimiter_index = raw_load.find(b':')
+        if delimiter_index != -1:
+            extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
         # packet.show()
-        print("Acknowledgment Received!\n")
+        print(f"Acknowledgment for message '{extracted_message}' Received!\n----------------------------------------------------------------")
 
 
 def wait_for_acknowledgment():
@@ -38,7 +42,6 @@ def wait_for_acknowledgment():
     print("Waiting for acknowledgment...")
     while not ack_received and (time.time() - start_time) < timeout:
         sniff(iface=IFACE, prn=handle_acknowledgment, count=1)
-
 
 def send_message(destination_mac, pre, message, **kwargs):
     # global IFACE
@@ -64,9 +67,9 @@ def receive_message(packet):
 
         if delimiter_index != -1:
             extracted_message = raw_load[delimiter_index + 1:].split(b'\x00')[0].decode('utf-8', errors='ignore')
-            print(f"Extracted message: {extracted_message}")
+            print(f"Extracted message: {extracted_message} from '{src_mac}'")
             send_message(stored_packet.source, PREA, extracted_message, src_mac=stored_packet.destination)
-            print(f"Acknowledgment for message '{extracted_message}' sent!\n")
+            print(f"Acknowledgment for message '{extracted_message}' sent!\n----------------------------------------------------------------")
             block_receiving = True
 
 
@@ -86,7 +89,7 @@ def main():
             send_message(destination_mac, PREM, message)
             wait_for_acknowledgment()
             if not ack_received:
-                print("No acknowledgment received.")
+                print("No acknowledgment received.\n----------------------------------------------------------------")
             ack_received = False
         elif choice.upper() == 'R':
             block_receiving = False
